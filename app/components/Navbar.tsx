@@ -1,18 +1,35 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "../context/AuthContext";
+import { useRouter } from "next/navigation";
+import { apiPost } from "../lib/api";
 
 interface NavbarProps {
   showNav?: boolean;
-  isLoggedIn?: boolean;
   onProtectedClick?: (e: React.MouseEvent) => void;
 }
 
 export default function Navbar({
   showNav = true,
-  isLoggedIn = false,
   onProtectedClick,
 }: NavbarProps) {
+  const { user, isLoggedIn, logout } = useAuth();
+  const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      if (user?.token) {
+        await apiPost("/auth/logout/", {});
+      }
+    } catch {
+      // ignore errors on logout
+    } finally {
+      logout();
+      router.push("/");
+    }
+  }
+
   return (
     <header className="w-full bg-[#f5f0ea] border-b border-[#d6cfc6]">
       <div className="max-w-6xl mx-auto px-8 h-16 flex items-center justify-between">
@@ -28,13 +45,23 @@ export default function Navbar({
         {showNav && (
           <nav className="hidden md:flex items-center gap-10">
             {(["Living", "Bedroom", "Dining"] as const).map((label) => (
-              <button
-                key={label}
-                onClick={onProtectedClick}
-                className="text-sm text-[#1a1a1a] hover:text-[#8b3a2a] transition-colors bg-transparent border-none cursor-pointer"
-              >
-                {label}
-              </button>
+              isLoggedIn ? (
+                <Link
+                  key={label}
+                  href={`/${label.toLowerCase()}`}
+                  className="text-sm text-[#1a1a1a] hover:text-[#8b3a2a] transition-colors"
+                >
+                  {label}
+                </Link>
+              ) : (
+                <button
+                  key={label}
+                  onClick={onProtectedClick}
+                  className="text-sm text-[#1a1a1a] hover:text-[#8b3a2a] transition-colors bg-transparent border-none cursor-pointer"
+                >
+                  {label}
+                </button>
+              )
             ))}
           </nav>
         )}
@@ -42,12 +69,25 @@ export default function Navbar({
         {/* Auth buttons */}
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
-            <Link
-              href="/"
-              className="text-sm text-[#1a1a1a] hover:text-[#8b3a2a] transition-colors"
-            >
-              Log out
-            </Link>
+            <>
+              <span className="text-sm text-[#5a5a5a] hidden md:block">
+                Hi, {user?.full_name?.split(" ")[0]}
+              </span>
+              {user?.role === "admin" && (
+                <Link
+                  href="/dashboard"
+                  className="text-sm text-[#1a1a1a] hover:text-[#8b3a2a] transition-colors"
+                >
+                  Dashboard
+                </Link>
+              )}
+              <button
+                onClick={handleLogout}
+                className="text-sm text-[#1a1a1a] hover:text-[#8b3a2a] transition-colors bg-transparent border-none cursor-pointer"
+              >
+                Log out
+              </button>
+            </>
           ) : (
             <>
               <Link

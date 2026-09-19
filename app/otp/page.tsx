@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import { apiPost } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function OTPPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [purpose, setPurpose] = useState("register");
@@ -28,13 +30,24 @@ export default function OTPPage() {
     setLoading(true);
     try {
       const data = await apiPost("/auth/verify-otp/", { email, code, purpose });
-      // Save token
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("full_name", data.full_name);
+
+      // Log the user in via context
+      login({
+        token: data.token,
+        role: data.role,
+        full_name: data.full_name,
+        email: data.email,
+      });
+
       localStorage.removeItem("otp_email");
       localStorage.removeItem("otp_purpose");
-      router.push("/");
+
+      // Redirect based on role
+      if (data.role === "admin") {
+        router.push("/dashboard");
+      } else {
+        router.push("/");
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Verification failed.");
     } finally {
@@ -96,7 +109,9 @@ export default function OTPPage() {
                 maxLength={6}
                 placeholder="000000"
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) =>
+                  setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
                 required
                 className="w-full bg-white border border-[#d6cfc6] rounded-sm px-4 py-3 text-sm text-[#1a1a1a] placeholder:text-[#a89f96] focus:outline-none focus:border-[#8b3a2a] transition-colors tracking-[0.3em]"
               />
@@ -107,7 +122,11 @@ export default function OTPPage() {
               disabled={loading || code.length < 6}
               className="w-full bg-[#8b3a2a] text-white text-sm py-3 rounded-sm hover:bg-[#7a3225] transition-colors mt-1 disabled:opacity-60"
             >
-              {loading ? "Verifying..." : "Verify and create account"}
+              {loading
+                ? "Verifying..."
+                : purpose === "register"
+                ? "Verify and create account"
+                : "Verify and log in"}
             </button>
 
             <p className="text-center text-sm text-[#5a5a5a]">

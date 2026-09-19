@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiPost } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 interface SignInModalProps {
   isOpen: boolean;
