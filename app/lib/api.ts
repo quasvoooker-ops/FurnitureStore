@@ -1,4 +1,4 @@
-const BASE_URL = 'https://furniturebackend-3ag7.onrender.com/api/';
+const BASE_URL = 'https://furniturebackend-3ag7.onrender.com/api';
 
 function authHeaders(token?: string): Record<string, string> {
   const h: Record<string, string> = { 'Content-Type': 'application/json' };
