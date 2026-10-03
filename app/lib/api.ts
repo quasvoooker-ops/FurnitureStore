@@ -1,4 +1,4 @@
-const BASE_URL = const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/';
 
 function authHeaders(token?: string): Record<string, string> {
   const h: Record<string, string> = { 'Content-Type': 'application/json' };
