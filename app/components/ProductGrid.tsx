@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import SignInModal from "./SignInModal";
 
 interface Product {
@@ -35,15 +36,17 @@ function StarRating({ rating, max = 5 }: { rating: number; max?: number }) {
 
 export default function ProductGrid({ products }: ProductGridProps) {
   const { isLoggedIn } = useAuth();
+  const { addToCart } = useCart();
   const [modalOpen, setModalOpen] = useState(false);
   const [added, setAdded] = useState<number | null>(null);
 
-  function handleAddToCart(id: number) {
+  function handleAddToCart(product: Product) {
     if (!isLoggedIn) {
       setModalOpen(true);
       return;
     }
-    setAdded(id);
+    addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
+    setAdded(product.id);
     setTimeout(() => setAdded(null), 1500);
   }
 
@@ -66,7 +69,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
                 <StarRating rating={item.rating} />
               </div>
               <button
-                onClick={() => handleAddToCart(item.id)}
+                onClick={() => handleAddToCart(item)}
                 className={`text-xs border px-4 py-2 transition-colors ${
                   added === item.id
                     ? "border-[#8b3a2a] bg-[#8b3a2a] text-white"
