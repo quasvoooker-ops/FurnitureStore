@@ -29,7 +29,7 @@ export default function OTPPage() {
     setError("");
     setLoading(true);
     try {
-      const data = await apiPost("/auth/verify-otp/", { email, code, purpose });
+      const data = await apiPost("auth/verify-otp/", { email, code, purpose });
 
       // Log the user in via context
       login({
@@ -60,7 +60,7 @@ export default function OTPPage() {
     setSuccess("");
     setResending(true);
     try {
-      await apiPost("/auth/resend-otp/", { email, purpose });
+      await apiPost("auth/resend-otp/", { email, purpose });
       setSuccess("A new OTP has been sent to your email.");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to resend OTP.");

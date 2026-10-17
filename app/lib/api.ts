@@ -6,13 +6,23 @@ function authHeaders(token?: string): Record<string, string> {
   return h;
 }
 
+async function parseResponse(res: Response) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (!res.ok) throw new Error(`Server error (${res.status})`);
+    throw new Error('Invalid response from server');
+  }
+}
+
 export async function apiPost(endpoint: string, body: object, token?: string) {
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'POST',
     headers: authHeaders(token),
     body: JSON.stringify(body),
   });
-  const data = await res.json();
+  const data = await parseResponse(res);
   if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
   return data;
 }
@@ -21,7 +31,7 @@ export async function apiGet(endpoint: string, token?: string) {
   const headers: Record<string, string> = {};
   if (token) headers['Authorization'] = `Token ${token}`;
   const res = await fetch(`${BASE_URL}${endpoint}`, { headers });
-  const data = await res.json();
+  const data = await parseResponse(res);
   if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
   return data;
 }
@@ -32,7 +42,7 @@ export async function apiPut(endpoint: string, body: object, token: string) {
     headers: authHeaders(token),
     body: JSON.stringify(body),
   });
-  const data = await res.json();
+  const data = await parseResponse(res);
   if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
   return data;
 }
@@ -43,7 +53,7 @@ export async function apiPatch(endpoint: string, body: object, token: string) {
     headers: authHeaders(token),
     body: JSON.stringify(body),
   });
-  const data = await res.json();
+  const data = await parseResponse(res);
   if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
   return data;
 }
