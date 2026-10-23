@@ -57,7 +57,7 @@ const STEPS = [
 ];
 
 // Auto-advance timing in milliseconds (demo)
-const STEP_DELAYS = [0, 4000, 9000, 15000, 22000];
+const STEP_DELAYS = [0, 5000, 10000, 16000, 23000];
 
 export default function OrderConfirmationPage() {
   const { isLoggedIn, user } = useAuth();
@@ -66,6 +66,7 @@ export default function OrderConfirmationPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [showReceipt, setShowReceipt] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const timersStarted = useRef(false);
 
   useEffect(() => {
     if (!isLoggedIn) { router.push("/signin"); return; }
@@ -73,16 +74,15 @@ export default function OrderConfirmationPage() {
     if (!saved) { router.push("/"); return; }
     setOrder(JSON.parse(saved));
     localStorage.removeItem("last_order");
-  }, [isLoggedIn, router]);
 
-  // Auto-advance status for demo
-  useEffect(() => {
-    if (!order) return;
+    // Start timers immediately when page loads — don't wait for order state
+    if (timersStarted.current) return;
+    timersStarted.current = true;
     const timers = STEP_DELAYS.map((delay, i) =>
       setTimeout(() => setCurrentStep(i), delay)
     );
     return () => timers.forEach(clearTimeout);
-  }, [order]);
+  }, [isLoggedIn, router]);
 
   function handlePrint() {
     setShowReceipt(true);
