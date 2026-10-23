@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import SignInModal from "./SignInModal";
@@ -40,7 +41,8 @@ export default function ProductGrid({ products }: ProductGridProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [added, setAdded] = useState<number | null>(null);
 
-  function handleAddToCart(product: Product) {
+  function handleAddToCart(e: React.MouseEvent, product: Product) {
+    e.preventDefault();
     if (!isLoggedIn) {
       setModalOpen(true);
       return;
@@ -55,21 +57,30 @@ export default function ProductGrid({ products }: ProductGridProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((item) => (
           <div key={item.id} className="bg-[#f5f0ea]">
-            <div className="bg-[#e8e0d5] aspect-[4/3] overflow-hidden mb-4">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              />
-            </div>
+            {/* Clickable image */}
+            <Link href={`/products/${item.id}`}>
+              <div className="bg-[#e8e0d5] aspect-[4/3] overflow-hidden mb-4 cursor-pointer">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            </Link>
+
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-sm font-medium text-[#1a1a1a] mb-0.5">{item.name}</p>
+                {/* Clickable name */}
+                <Link href={`/products/${item.id}`}>
+                  <p className="text-sm font-medium text-[#1a1a1a] mb-0.5 hover:text-[#8b3a2a] transition-colors">
+                    {item.name}
+                  </p>
+                </Link>
                 <p className="text-sm text-[#5a5a5a] mb-1.5">{item.price}</p>
                 <StarRating rating={item.rating} />
               </div>
               <button
-                onClick={() => handleAddToCart(item)}
+                onClick={(e) => handleAddToCart(e, item)}
                 className={`text-xs border px-4 py-2 transition-colors ${
                   added === item.id
                     ? "border-[#8b3a2a] bg-[#8b3a2a] text-white"
