@@ -3,6 +3,7 @@ import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { ToastProvider } from "./components/Toast";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -27,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        <AuthProvider><CartProvider>{children}</CartProvider></AuthProvider>
+        <AuthProvider><CartProvider><ToastProvider>{children}</ToastProvider></CartProvider></AuthProvider>
       </body>
     </html>
   );

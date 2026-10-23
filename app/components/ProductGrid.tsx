@@ -35,9 +35,12 @@ function StarRating({ rating, max = 5 }: { rating: number; max?: number }) {
   );
 }
 
+import { useToast } from "./Toast";
+
 export default function ProductGrid({ products }: ProductGridProps) {
   const { isLoggedIn } = useAuth();
   const { addToCart } = useCart();
+  const { showToast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [added, setAdded] = useState<number | null>(null);
 
@@ -49,6 +52,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
     }
     addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
     setAdded(product.id);
+    showToast(`${product.name} added to cart`);
     setTimeout(() => setAdded(null), 1500);
   }
 
