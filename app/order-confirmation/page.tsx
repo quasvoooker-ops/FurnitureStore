@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
+import { apiGet } from "../lib/api";
 
 interface LocalOrder {
   id: number;
@@ -87,19 +88,29 @@ export default function OrderConfirmationPage() {
     setCurrentStep(STEP_KEY_MAP[parsed.status] ?? 0);
   }, [isLoggedIn, router]);
 
-  // Poll localStorage for status changes (admin updates it)
+  // Poll for status changes — try real API first, fall back to localStorage
   useEffect(() => {
-    if (!order) return;
-    const interval = setInterval(() => {
-      const allOrders = JSON.parse(localStorage.getItem("all_orders") || "[]");
-      const updated = allOrders.find((o: LocalOrder) => o.id === order.id);
-      if (updated && updated.status !== order.status) {
-        setOrder(updated);
-        setCurrentStep(STEP_KEY_MAP[updated.status] ?? 0);
+    if (!order || !user?.token) return;
+    const interval = setInterval(async () => {
+      try {
+        const updated = await apiGet(`/orders/${order.id}/`, user.token);
+        const newStatus = updated.status;
+        if (newStatus !== order.status) {
+          setOrder((prev: LocalOrder | null) => prev ? { ...prev, status: newStatus } : prev);
+          setCurrentStep(STEP_KEY_MAP[newStatus] ?? 0);
+        }
+      } catch {
+        // Fallback: check localStorage
+        const allOrders = JSON.parse(localStorage.getItem("all_orders") || "[]");
+        const updated = allOrders.find((o: LocalOrder) => o.id === order.id);
+        if (updated && updated.status !== order.status) {
+          setOrder(updated);
+          setCurrentStep(STEP_KEY_MAP[updated.status] ?? 0);
+        }
       }
-    }, 2000);
+    }, 3000);
     return () => clearInterval(interval);
-  }, [order]);
+  }, [order, user?.token]);
 
   function handlePrint() {
     setShowReceipt(true);

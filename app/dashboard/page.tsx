@@ -77,16 +77,34 @@ export default function DashboardPage() {
   // Orders
   const [orders, setOrders] = useState<LocalOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<LocalOrder | null>(null);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [usingRealApi, setUsingRealApi] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) { router.push("/signin"); return; }
     if (user?.role !== "admin") { router.push("/"); }
   }, [isLoggedIn, user, router]);
 
+  const fetchOrders = useCallback(async () => {
+    if (!user?.token) return;
+    setOrdersLoading(true);
+    try {
+      const data = await apiGet("/orders/all/", user.token);
+      setOrders(data);
+      setUsingRealApi(true);
+    } catch {
+      // Fallback to localStorage
+      const all = JSON.parse(localStorage.getItem("all_orders") || "[]");
+      setOrders(all);
+      setUsingRealApi(false);
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, [user?.token]);
+
   useEffect(() => {
-    const all = JSON.parse(localStorage.getItem("all_orders") || "[]");
-    setOrders(all);
-  }, [activeTab]);
+    if (activeTab === "orders") fetchOrders();
+  }, [activeTab, fetchOrders]);
 
   const fetchProducts = useCallback(async () => {
     if (!user?.token) return;
@@ -146,7 +164,19 @@ export default function DashboardPage() {
     } catch (err: unknown) { setError(err instanceof Error ? err.message : "Toggle failed."); }
   }
 
-  function handleOrderStatusChange(orderId: number, newStatus: string) {
+  async function handleOrderStatusChange(orderId: number, newStatus: string) {
+    if (usingRealApi && user?.token) {
+      try {
+        await apiPatch(`/orders/${orderId}/status/`, { status: newStatus }, user.token);
+        fetchOrders();
+        if (selectedOrder?.id === orderId) setSelectedOrder({ ...selectedOrder, status: newStatus });
+        showToast(`Order status → "${newStatus}"`);
+        return;
+      } catch {
+        // Fall through to localStorage
+      }
+    }
+    // localStorage fallback
     const all = JSON.parse(localStorage.getItem("all_orders") || "[]");
     const updated = all.map((o: LocalOrder) => o.id === orderId ? { ...o, status: newStatus } : o);
     localStorage.setItem("all_orders", JSON.stringify(updated));
@@ -281,7 +311,9 @@ export default function DashboardPage() {
         {/* ORDERS TAB */}
         {activeTab === "orders" && (
           <>
-            {orders.length === 0 ? (
+            {ordersLoading ? (
+              <div className="text-center py-20 text-[#5a5a5a]">Loading orders...</div>
+            ) : orders.length === 0 ? (
               <div className="text-center py-24 text-[#5a5a5a] text-sm">No orders yet.</div>
             ) : selectedOrder ? (
               <div>
