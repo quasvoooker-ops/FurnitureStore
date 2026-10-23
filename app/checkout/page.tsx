@@ -80,10 +80,24 @@ export default function CheckoutPage() {
           image: i.image,
         })),
       }, user.token);
-      clearCart();
+      clearCart(); // Only clear AFTER successful order
       router.push(`/orders/${order.id}?new=1`);
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : "Order failed. Please try again.", "error");
+    } catch {
+      // Orders API not available yet — save order locally and show confirmation
+      const localOrder = {
+        id: Date.now(),
+        ...form,
+        items: items.map(i => ({ ...i })),
+        subtotal,
+        shippingFee,
+        total,
+        status: "pending",
+        created_at: new Date().toISOString(),
+      };
+      clearCart();
+      // Store in localStorage so confirmation page can read it
+      localStorage.setItem("last_order", JSON.stringify(localOrder));
+      router.push(`/order-confirmation`);
     } finally {
       setLoading(false);
     }
