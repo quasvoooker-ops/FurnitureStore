@@ -1,40 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "./components/Navbar";
 import SignInModal from "./components/SignInModal";
 import ProductGrid from "./components/ProductGrid";
 import { useAuth } from "./context/AuthContext";
+import { apiGet } from "./lib/api";
 
-const bestSellers = [
-  {
-    id: 1,
-    name: "Harlow Sofa",
-    price: "$2,180",
-    rating: 4,
-    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop",
-  },
-  {
-    id: 2,
-    name: "Windsor Table",
-    price: "$1,599",
-    rating: 4,
-    image: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400&h=300&fit=crop",
-  },
-  {
-    id: 3,
-    name: "Copperfield",
-    price: "$2,590",
-    rating: 4,
-    image: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=400&h=300&fit=crop",
-  },
-];
+interface Product {
+  id: number;
+  name: string;
+  price: string;
+  rating: number;
+  image: string;
+  is_available: boolean;
+  category: string;
+}
 
 export default function Home() {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
+  const [bestSellers, setBestSellers] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiGet("/products/?ordering=-rating")
+      .then((data) => {
+        const list = data.results ?? data;
+        // Show top 3 available products as best sellers
+        setBestSellers(
+          list.filter((p: Product) => p.is_available).slice(0, 3)
+        );
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   function handleProtected(e: React.MouseEvent) {
     e.preventDefault();
@@ -81,7 +83,18 @@ export default function Home() {
         <h2 className="font-[family-name:var(--font-playfair)] text-2xl font-normal text-[#1a1a1a] mb-8">
           Best sellers
         </h2>
-        <ProductGrid products={bestSellers} />
+        {loading && (
+          <p className="text-[#5a5a5a] text-sm text-center py-10">Loading...</p>
+        )}
+        {!loading && bestSellers.length > 0 && (
+          <ProductGrid products={bestSellers.map(p => ({
+            ...p,
+            price: `$${parseFloat(p.price).toLocaleString()}`,
+          }))} />
+        )}
+        {!loading && bestSellers.length === 0 && (
+          <p className="text-[#5a5a5a] text-sm text-center py-10">No products available yet.</p>
+        )}
       </section>
 
       <SignInModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
