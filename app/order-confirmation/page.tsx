@@ -56,8 +56,14 @@ const STEPS = [
   },
 ];
 
-// Auto-advance timing in milliseconds (demo)
-const STEP_DELAYS = [0, 5000, 10000, 16000, 23000];
+// No auto-advance — status is controlled by admin
+const STEP_KEY_MAP: Record<string, number> = {
+  placed: 0, pending: 0,
+  confirmed: 1,
+  processing: 2,
+  shipped: 3,
+  arrived: 4, delivered: 4,
+};
 
 export default function OrderConfirmationPage() {
   const { isLoggedIn, user } = useAuth();
@@ -66,23 +72,34 @@ export default function OrderConfirmationPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [showReceipt, setShowReceipt] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
-  const timersStarted = useRef(false);
 
   useEffect(() => {
     if (!isLoggedIn) { router.push("/signin"); return; }
     const saved = localStorage.getItem("last_order");
     if (!saved) { router.push("/"); return; }
-    setOrder(JSON.parse(saved));
+    const parsed = JSON.parse(saved);
+    setOrder(parsed);
     localStorage.removeItem("last_order");
-
-    // Start timers immediately when page loads — don't wait for order state
-    if (timersStarted.current) return;
-    timersStarted.current = true;
-    const timers = STEP_DELAYS.map((delay, i) =>
-      setTimeout(() => setCurrentStep(i), delay)
-    );
-    return () => timers.forEach(clearTimeout);
+    // Save to orders list for admin to manage
+    const existing = JSON.parse(localStorage.getItem("all_orders") || "[]");
+    existing.unshift(parsed);
+    localStorage.setItem("all_orders", JSON.stringify(existing));
+    setCurrentStep(STEP_KEY_MAP[parsed.status] ?? 0);
   }, [isLoggedIn, router]);
+
+  // Poll localStorage for status changes (admin updates it)
+  useEffect(() => {
+    if (!order) return;
+    const interval = setInterval(() => {
+      const allOrders = JSON.parse(localStorage.getItem("all_orders") || "[]");
+      const updated = allOrders.find((o: LocalOrder) => o.id === order.id);
+      if (updated && updated.status !== order.status) {
+        setOrder(updated);
+        setCurrentStep(STEP_KEY_MAP[updated.status] ?? 0);
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [order]);
 
   function handlePrint() {
     setShowReceipt(true);
@@ -180,9 +197,9 @@ export default function OrderConfirmationPage() {
                 Order Tracking
               </h2>
               {currentStep < STEPS.length - 1 && (
-                <span className="flex items-center gap-1.5 text-xs text-[#8b3a2a]">
+                <span className="flex items-center gap-1.5 text-xs text-[#5a5a5a]">
                   <span className="w-2 h-2 bg-[#8b3a2a] rounded-full animate-pulse" />
-                  Live update
+                  Updating live
                 </span>
               )}
             </div>
