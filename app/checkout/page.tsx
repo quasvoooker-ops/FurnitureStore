@@ -35,11 +35,12 @@ export default function CheckoutPage() {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [orderPlaced, setOrderPlaced] = useState(false); // prevents cart redirect after placing order
 
   useEffect(() => {
     if (!isLoggedIn) { router.push("/signin"); return; }
-    if (items.length === 0) { router.push("/cart"); }
-  }, [isLoggedIn, items, router]);
+    if (items.length === 0 && !orderPlaced) { router.push("/cart"); }
+  }, [isLoggedIn, items, router, orderPlaced]);
 
   useEffect(() => {
     if (user) {
@@ -80,10 +81,11 @@ export default function CheckoutPage() {
           image: i.image,
         })),
       }, user.token);
-      clearCart(); // Only clear AFTER successful order
+      setOrderPlaced(true);
+      clearCart();
       router.push(`/orders/${order.id}?new=1`);
     } catch {
-      // Orders API not available yet — save order locally and show confirmation
+      // Orders API not available — save locally and show confirmation
       const localOrder = {
         id: Date.now(),
         ...form,
@@ -94,8 +96,8 @@ export default function CheckoutPage() {
         status: "pending",
         created_at: new Date().toISOString(),
       };
+      setOrderPlaced(true);
       clearCart();
-      // Store in localStorage so confirmation page can read it
       localStorage.setItem("last_order", JSON.stringify(localOrder));
       router.push(`/order-confirmation`);
     } finally {
@@ -103,7 +105,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (!isLoggedIn || items.length === 0) return null;
+  if (!isLoggedIn || (items.length === 0 && !orderPlaced)) return null;
 
   return (
     <div className="min-h-screen bg-[#f5f0ea]">
