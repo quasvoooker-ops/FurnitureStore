@@ -17,7 +17,7 @@ export default function Navbar({ showNav = true, onProtectedClick }: NavbarProps
 
   async function handleLogout() {
     try {
-      if (user?.token) await apiPost("auth/logout/", {});
+      if (user?.token) await apiPost("/auth/logout/", {});
     } catch {
       // ignore
     } finally {

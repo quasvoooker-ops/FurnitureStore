@@ -21,7 +21,7 @@ export default function SignInPage() {
     setError("");
     setLoading(true);
     try {
-      await apiPost("auth/login/", {
+      await apiPost("/auth/login/", {
         email: form.email,
         password: form.password,
       });

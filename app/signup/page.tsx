@@ -21,7 +21,7 @@ export default function SignUpPage() {
     setError("");
     setLoading(true);
     try {
-      await apiPost("auth/register/", {
+      await apiPost("/auth/register/", {
         full_name: form.fullName,
         email: form.email,
         password: form.password,
