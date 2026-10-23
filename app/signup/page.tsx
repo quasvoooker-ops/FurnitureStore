@@ -8,7 +8,12 @@ import { apiPost } from "../lib/api";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,6 +24,16 @@ export default function SignUpPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
     try {
       await apiPost("/auth/register/", {
@@ -26,7 +41,6 @@ export default function SignUpPage() {
         email: form.email,
         password: form.password,
       });
-      // Save email so OTP page knows where to send
       localStorage.setItem("otp_email", form.email);
       localStorage.setItem("otp_purpose", "register");
       router.push("/otp");
@@ -36,6 +50,9 @@ export default function SignUpPage() {
       setLoading(false);
     }
   }
+
+  const passwordsMatch =
+    form.confirmPassword === "" || form.password === form.confirmPassword;
 
   return (
     <div className="min-h-screen bg-[#f5f0ea]">
@@ -59,6 +76,7 @@ export default function SignUpPage() {
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {/* Full name */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm text-[#1a1a1a]" htmlFor="fullName">
                 Full name
@@ -75,6 +93,7 @@ export default function SignUpPage() {
               />
             </div>
 
+            {/* Email */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm text-[#1a1a1a]" htmlFor="email">
                 Email
@@ -91,6 +110,7 @@ export default function SignUpPage() {
               />
             </div>
 
+            {/* Password */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm text-[#1a1a1a]" htmlFor="password">
                 Password
@@ -108,9 +128,34 @@ export default function SignUpPage() {
               />
             </div>
 
+            {/* Confirm Password */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm text-[#1a1a1a]" htmlFor="confirmPassword">
+                Confirm password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                placeholder="••••••••••"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                required
+                minLength={8}
+                className={`w-full bg-white border rounded-sm px-4 py-3 text-sm text-[#1a1a1a] placeholder:text-[#a89f96] focus:outline-none transition-colors ${
+                  passwordsMatch
+                    ? "border-[#d6cfc6] focus:border-[#8b3a2a]"
+                    : "border-red-300 focus:border-red-400"
+                }`}
+              />
+              {!passwordsMatch && (
+                <p className="text-xs text-red-500 mt-0.5">Passwords do not match.</p>
+              )}
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !passwordsMatch}
               className="w-full bg-[#8b3a2a] text-white text-sm py-3 rounded-sm hover:bg-[#7a3225] transition-colors mt-1 disabled:opacity-60"
             >
               {loading ? "Creating account..." : "Create account"}
