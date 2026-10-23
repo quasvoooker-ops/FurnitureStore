@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import { apiPost } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -16,6 +18,10 @@ export default function SignUpPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isLoggedIn) router.replace("/");
+  }, [isLoggedIn, router]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
