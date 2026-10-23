@@ -35,19 +35,17 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  // Step 2 — Verify OTP
+  // Step 2 — Verify OTP (just move to reset step, don't consume the OTP yet)
   async function handleVerifyOTP(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
-    try {
-      await apiPost("/auth/verify-otp/", { email, code, purpose: "reset" });
-      setStep("reset");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid or expired code.");
-    } finally {
-      setLoading(false);
+    if (code.length < 6) {
+      setError("Please enter the 6-digit code.");
+      return;
     }
+    // Don't call verify-otp here — that would mark the OTP as used.
+    // Instead pass the code directly to reset-password which verifies + resets in one step.
+    setStep("reset");
   }
 
   // Step 3 — Reset password
