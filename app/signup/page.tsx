@@ -21,6 +21,9 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (isLoggedIn) router.replace("/");
+    // Also check localStorage directly for immediate redirect on hard refresh
+    const token = localStorage.getItem("token");
+    if (token) router.replace("/");
   }, [isLoggedIn, router]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {

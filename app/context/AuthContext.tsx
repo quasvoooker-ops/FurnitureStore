@@ -24,9 +24,20 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    // Initialize synchronously from localStorage so auth state is available on first render
+    if (typeof window === "undefined") return null;
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    const full_name = localStorage.getItem("full_name");
+    const email = localStorage.getItem("email");
+    if (token && role && full_name && email) {
+      return { token, role, full_name, email };
+    }
+    return null;
+  });
 
-  // Restore session from localStorage on mount
+  // Keep as fallback for SSR/hydration edge cases
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
