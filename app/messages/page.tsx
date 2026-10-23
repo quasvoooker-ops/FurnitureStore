@@ -222,9 +222,6 @@ export default function MessagesPage() {
                 ) : (tab === "inbox" ? inbox : sent).length === 0 ? (
                   <div className="text-center py-16">
                     <p className="text-sm text-[#5a5a5a]">No messages yet.</p>
-                    {tab === "inbox" && (
-                      <button onClick={() => setTab("compose")} className="mt-3 text-sm text-[#8b3a2a] hover:underline">Send your first message</button>
-                    )}
                   </div>
                 ) : (
                   <div className="divide-y divide-[#f0ebe4]">
