@@ -43,10 +43,10 @@ export default function OTPPage() {
       localStorage.removeItem("otp_purpose");
 
       // Redirect based on role
-      if (data.role === "admin") {
+      if (data.role === "admin" || data.role === "staff") {
         router.push("/dashboard");
       } else {
-        router.push("/");
+        router.push("/dashboard/customer");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Verification failed.");

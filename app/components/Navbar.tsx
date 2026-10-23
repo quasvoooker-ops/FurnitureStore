@@ -67,9 +67,13 @@ export default function Navbar({ showNav = true, onProtectedClick }: NavbarProps
               <span className="text-sm text-[#5a5a5a] hidden md:block">
                 Hi, {user?.full_name?.split(" ")[0]}
               </span>
-              {user?.role === "admin" && (
+              {user?.role === "admin" || user?.role === "staff" ? (
                 <Link href="/dashboard" className="text-sm text-[#1a1a1a] hover:text-[#8b3a2a] transition-colors">
                   Dashboard
+                </Link>
+              ) : (
+                <Link href="/dashboard/customer" className="text-sm text-[#1a1a1a] hover:text-[#8b3a2a] transition-colors">
+                  My Account
                 </Link>
               )}
               <button
