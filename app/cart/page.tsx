@@ -41,8 +41,7 @@ export default function CartPage() {
   }
 
   function handleCheckout() {
-    showToast("Order placed! Thank you for your purchase.", "success");
-    clearCart();
+    router.push("/checkout");
   }
 
   if (!isLoggedIn) return null;
